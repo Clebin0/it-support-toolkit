@@ -1,31 +1,23 @@
-# Architecture
+# Arquitetura
 
-## Goal
-
-IT Support Toolkit collects diagnostic evidence before corrective action. The project is intentionally read-only.
-
-## Flow
+A proposta do toolkit é coletar informação antes de sair alterando configuração da máquina.
 
 ```mermaid
 flowchart LR
-    A[Local machine] --> B[Diagnostic collectors]
-    B --> C[CPU / memory / uptime]
-    B --> D[Disk inventory]
-    B --> E[Network / DNS]
-    B --> F[Process usage]
-    C --> G[Normalized diagnostic report]
+    A[Máquina] --> B[Coleta]
+    B --> C[CPU / memória / uptime]
+    B --> D[Discos]
+    B --> E[Rede / DNS]
+    B --> F[Processos]
+    C --> G[Relatório]
     D --> G
     E --> G
     F --> G
-    G --> H[Rule-based recommendations]
-    G --> I[JSON export]
-    G --> J[FastAPI dashboard]
+    G --> H[Recomendações]
+    G --> I[JSON]
+    G --> J[Dashboard]
 ```
 
-## Design principle
+A coleta é somente leitura. O projeto não altera registro, firewall, usuários ou políticas do Windows.
 
-Evidence comes before remediation. The toolkit does not modify registry settings, firewall rules, local users, policies or system configuration.
-
-## Production evolution
-
-Future versions can add signed reports, remote collection through an authenticated agent, structured incident bundles, inventory correlation and integrations with monitoring or ITSM systems.
+A ideia é usar o relatório como ponto de partida para troubleshooting, em vez de executar correções automáticas sem saber primeiro o que está acontecendo.
