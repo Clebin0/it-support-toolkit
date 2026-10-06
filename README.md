@@ -1,43 +1,64 @@
+<div align="center">
+
 # IT Support Toolkit
 
-Toolkit de diagnostico para suporte e infraestrutura, com CLI e dashboard web.
+**Diagnóstico · Infraestrutura · Evidências · Read-only**
+
+<img src="https://img.shields.io/badge/Python-000000?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+<img src="https://img.shields.io/badge/FastAPI-000000?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+<img src="https://img.shields.io/badge/Windows-000000?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+<img src="https://img.shields.io/badge/Linux-000000?style=for-the-badge&logo=linux&logoColor=white" alt="Linux" />
+
+</div>
+
+---
+
+Toolkit de diagnóstico para suporte e infraestrutura com CLI e dashboard web.
 
 ## Recursos
 
-- CPU, memoria e uptime
-- Inventario de discos
-- Interfaces de rede
-- Teste de conectividade externa
-- Teste de DNS
-- Processos com maior consumo
-- Recomendacoes basicas baseadas em limiares
-- Exportacao de relatorio JSON
-- Dashboard web
-- Operacao somente leitura
+- CPU, memória e uptime;
+- inventário de discos;
+- interfaces de rede;
+- teste de conectividade externa;
+- teste de DNS;
+- processos com maior consumo;
+- recomendações baseadas em limiares;
+- exportação de relatório JSON;
+- dashboard web;
+- operação somente leitura.
 
 ## CLI
 
-```bash
+~~~bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 python support_toolkit.py --report reports/diagnostic.json
-```
+~~~
 
 ## Dashboard
 
-```bash
+~~~bash
 uvicorn web_app:app --reload
-```
+~~~
 
-Abra http://127.0.0.1:8000.
+Acesse <code>http://127.0.0.1:8000</code>.
 
 ## Testes
 
-```bash
+~~~bash
 python -m pytest -q
-```
+~~~
 
-## Seguranca
+## Segurança
 
-O projeto nao altera registro, firewall, usuarios, politicas ou configuracoes do sistema. A proposta e coletar evidencias antes de qualquer acao corretiva.
+O toolkit não altera registro, firewall, usuários, políticas ou configurações do sistema. A proposta é coletar evidências antes de qualquer ação corretiva.
+
+---
+
+<div align="center">
+
+Diagnosticar primeiro. Reiniciar “pra ver se volta” depois.
+
+</div>
