@@ -6,9 +6,17 @@ O IT Support Toolkit foi concebido para coletar informações sem modificar a co
 
 O programa lê métricas expostas pelo sistema operacional, interfaces de rede, discos montados, DNS e metadados de processos. Não altera registro, firewall, contas, serviços, drivers ou políticas.
 
-## Exposição do dashboard
+## Proteção do dashboard
 
-A aplicação FastAPI não implementa autenticação. Por isso, o servidor deve permanecer ligado a `127.0.0.1` durante o uso local. Não use `--host 0.0.0.0` em redes compartilhadas ou públicas sem adicionar autenticação, controle de acesso e proteção de transporte.
+A aplicação FastAPI não implementa autenticação de usuário. Para reduzir o risco de exposição acidental, toda requisição é bloqueada quando o endereço do cliente não é loopback. O middleware também restringe o cabeçalho `Host` a `localhost`, `127.0.0.1` e `[::1]`.
+
+Execute sempre com:
+
+```powershell
+uvicorn web_app:app --host 127.0.0.1 --port 8000
+```
+
+Não publique a porta, não use `--host 0.0.0.0` e não coloque o dashboard atrás de um proxy reverso público. O bloqueio de loopback é uma defesa adicional, não substitui autenticação para uma instalação multiusuário.
 
 ## Dados coletados
 

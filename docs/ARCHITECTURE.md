@@ -17,12 +17,13 @@ flowchart TD
     I --> J[CLI JSON]
     I --> K[FastAPI /diagnostic]
     K --> L[Dashboard local]
+    K --> M[Loopback e Host allow-list]
 ```
 
 ## Módulos
 
 - `support_toolkit.py`: funções de coleta, formatação do relatório e CLI.
-- `web_app.py`: camada HTTP. Devolve mensagem genérica ao navegador quando a coleta falha e guarda detalhes no log local.
+- `web_app.py`: camada HTTP. Devolve mensagem genérica ao navegador quando a coleta falha, registra detalhes localmente e restringe acesso à origem local.
 - `frontend.html`: apresentação dos dados devolvidos pela API.
 
 ## Coleta e limites
@@ -33,4 +34,4 @@ O teste ICMP consulta um endereço externo uma única vez. Firewalls podem bloqu
 
 ## Segurança
 
-O dashboard não possui autenticação e deve ficar em loopback. Os relatórios podem conter endereços, hostname, processos e pontos de montagem. A aplicação não altera configurações, mas ainda assim os dados coletados devem ser tratados com cuidado.
+O dashboard não possui autenticação. O servidor aceita somente clientes com IP de loopback e cabeçalhos Host locais. Execute em `127.0.0.1` e não o exponha diretamente nem através de proxy reverso. Os relatórios podem conter endereços, hostname, processos e pontos de montagem.
