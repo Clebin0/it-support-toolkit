@@ -1,8 +1,162 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IT Support Toolkit</title>
-<style>:root{--bg:#0b0c0f;--panel:#15171b;--line:#292d33;--text:#f4f4f5;--muted:#9ca3af;--accent:#ff7a18}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,Segoe UI,sans-serif}.wrap{max-width:1150px;margin:auto;padding:28px}.brand{font-size:24px;font-weight:900}.brand b{color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}.panel{margin-top:14px}.num{font-size:28px;font-weight:900}.muted{color:var(--muted)}button{background:var(--accent);color:#111;border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}}</style></head>
-<body><div class="wrap"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="brand">IT SUPPORT <b>TOOLKIT</b></div><p class="muted">Diagnostico somente leitura para suporte e infraestrutura.</p></div><button onclick="load()">Executar diagnostico</button></div>
-<div class="grid"><div class="card"><div class="muted">CPU</div><div id="cpu" class="num">-</div></div><div class="card"><div class="muted">Memoria</div><div id="mem" class="num">-</div></div><div class="card"><div class="muted">Internet</div><div id="net" class="num">-</div></div><div class="card"><div class="muted">DNS</div><div id="dns" class="num">-</div></div></div>
-<div class="panel"><h3>Resumo</h3><div id="summary" class="muted">Execute um diagnostico.</div></div>
-<div class="panel"><h3>Discos</h3><table><thead><tr><th>Dispositivo</th><th>Montagem</th><th>Total</th><th>Livre</th><th>Uso</th></tr></thead><tbody id="disks"></tbody></table></div>
-<div class="panel"><h3>Processos em destaque</h3><table><thead><tr><th>PID</th><th>Processo</th><th>CPU</th><th>Memoria</th></tr></thead><tbody id="procs"></tbody></table></div></div>
-<script>async function load(){let d=await (await fetch("/diagnostic")).json();cpu.textContent=d.cpu.percent+"%";mem.textContent=d.memory.percent+"%";net.textContent=d.connectivity.internet_ip_test?"OK":"Falha";dns.textContent=d.connectivity.dns.ok?"OK":"Falha";summary.innerHTML="<b>"+d.hostname+"</b><br>"+d.os+"<br><br>"+d.recommendations.map(x=>"â€¢ "+x).join("<br>");disks.innerHTML=d.disks.map(x=>`<tr><td>${x.device}</td><td>${x.mount}</td><td>${x.total_gb} GB</td><td>${x.free_gb} GB</td><td>${x.used_percent}%</td></tr>`).join("");procs.innerHTML=d.top_processes.map(x=>`<tr><td>${x.pid}</td><td>${x.name}</td><td>${x.cpu_percent}%</td><td>${x.memory_percent}%</td></tr>`).join("")}</script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111214">
+  <title>IT Support Toolkit</title>
+  <style>
+    :root{color-scheme:dark;--bg:#111214;--surface:#191b1f;--surface2:#15171a;--line:#2a2e34;--text:#eceef0;--muted:#9299a3;--accent:#f18b37;--ok:#5dbb91;--warn:#e2ae61;--bad:#df7777}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(ellipse at 15% 0%,rgba(241,139,55,.09),transparent 34rem),var(--bg);color:var(--text);font:14px/1.5 Inter,"Segoe UI",Arial,sans-serif}
+    .wrap{width:min(1180px,100%);margin:0 auto;padding:34px 26px 50px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:13px}
+    .mark{width:42px;height:42px;display:grid;place-items:center;background:var(--accent);color:#171717;border-radius:9px;font-weight:900}
+    .eyebrow{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);font-weight:800}
+    h1{margin:2px 0 0;font-size:24px;letter-spacing:-.04em}
+    .subtitle{margin:4px 0 0;color:var(--muted);font-size:12px}
+    button{border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#181818;font:inherit;font-weight:750;padding:10px 14px;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}
+    button:focus-visible{outline:2px solid #ffd4aa;outline-offset:2px}
+    .status{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;margin-bottom:7px}
+    .status i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}
+    .metric,.panel{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+    .metric{padding:15px}
+    .metric small{color:var(--muted);font-size:11px}
+    .metric strong{display:block;margin-top:5px;font-size:27px;letter-spacing:-.04em}
+    .metric .foot{color:var(--muted);font-size:10px;margin-top:4px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
+    .panel{padding:18px;margin-top:12px}
+    .panel h2{font-size:14px;margin:0 0 14px}
+    .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .meta div{padding:10px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface2)}
+    .meta small{display:block;color:var(--muted);font-size:10px}
+    .meta strong{display:block;margin-top:3px;font-size:12px;overflow-wrap:anywhere}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;min-width:520px}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:11px}
+    th{color:var(--muted);font-weight:650}
+    td{color:#d6d9dc}
+    .recommendations{display:grid;gap:8px}
+    .recommendation{padding:10px 12px;border-left:2px solid var(--warn);background:var(--surface2);color:#c8ccd1;font-size:11px}
+    .recommendation.ok{border-color:var(--ok)}
+    .note{margin:13px 0 0;color:var(--muted);font-size:10px;line-height:1.6}
+    .error{padding:12px;border:1px solid rgba(223,119,119,.35);background:rgba(223,119,119,.08);color:#f0b1b1;border-radius:6px;font-size:12px}
+    .empty{padding:18px 0;color:var(--muted);font-size:12px}
+    footer{margin-top:18px;padding-top:13px;border-top:1px solid var(--line);color:#737a82;font-size:10px}
+    @media(max-width:850px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
+    @media(max-width:500px){.wrap{padding:22px 14px 35px}header{align-items:flex-start}.metrics{gap:7px}.metric{padding:12px}.metric strong{font-size:22px}.meta{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand">
+        <div class="mark" aria-hidden="true">IT</div>
+        <div><div class="eyebrow">Diagnóstico local · somente leitura</div><h1>IT Support Toolkit</h1><p class="subtitle">Registre o estado da estação antes de iniciar a correção.</p></div>
+      </div>
+      <div>
+        <div class="status"><i></i><span id="state">Aguardando coleta</span></div>
+        <button id="run" type="button">Executar diagnóstico</button>
+      </div>
+    </header>
+    <section class="metrics" aria-label="Indicadores principais">
+      <article class="metric"><small>Uso de CPU</small><strong id="cpu">—</strong><div class="foot" id="cpuCores">Aguardando coleta</div></article>
+      <article class="metric"><small>Memória usada</small><strong id="memory">—</strong><div class="foot" id="memoryDetail">Aguardando coleta</div></article>
+      <article class="metric"><small>Armazenamento</small><strong id="disk">—</strong><div class="foot" id="diskDetail">Maior uso entre volumes</div></article>
+      <article class="metric"><small>Uptime</small><strong id="uptime">—</strong><div class="foot">Desde a última inicialização</div></article>
+    </section>
+    <div id="error" class="error" role="alert" hidden></div>
+    <section class="grid">
+      <article class="panel"><h2>Identificação da estação</h2><div id="system" class="meta"><div class="empty">Execute uma coleta para preencher os dados.</div></div></article>
+      <article class="panel"><h2>Conectividade</h2><div id="network" class="meta"><div class="empty">Aguardando coleta.</div></div></article>
+    </section>
+    <section class="panel"><h2>Volumes de armazenamento</h2><div class="table-wrap"><table><thead><tr><th>Dispositivo</th><th>Ponto de montagem</th><th>Sistema</th><th>Total</th><th>Livre</th><th>Uso</th></tr></thead><tbody id="disks"><tr><td colspan="6" class="empty">Aguardando coleta.</td></tr></tbody></table></div></section>
+    <section class="grid">
+      <article class="panel"><h2>Processos com maior consumo</h2><div class="table-wrap"><table><thead><tr><th>PID</th><th>Processo</th><th>CPU</th><th>Memória</th></tr></thead><tbody id="processes"><tr><td colspan="4" class="empty">Aguardando coleta.</td></tr></tbody></table></div></article>
+      <article class="panel"><h2>Pontos para investigar</h2><div id="recommendations" class="recommendations"><div class="empty">As recomendações aparecerão após a coleta.</div></div></article>
+    </section>
+    <p class="note">A coleta é uma fotografia do instante, não um monitoramento contínuo. Falha de ICMP não comprova indisponibilidade de internet; processos e endereços podem conter dados sensíveis. Revise o relatório antes de compartilhá-lo.</p>
+    <footer>IT Support Toolkit · execução local · nenhuma alteração é aplicada à estação.</footer>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const number = (value, digits = 1) => Number(value || 0).toLocaleString("pt-BR", {maximumFractionDigits: digits});
+    const escapeText = (value) => String(value ?? "—");
+    function cell(label, value) {
+      const box = document.createElement("div");
+      const title = document.createElement("small");
+      const content = document.createElement("strong");
+      title.textContent = label; content.textContent = escapeText(value);
+      box.append(title, content); return box;
+    }
+    function row(values) {
+      const tr = document.createElement("tr");
+      for (const value of values) { const td = document.createElement("td"); td.textContent = escapeText(value); tr.append(td); }
+      return tr;
+    }
+    function formatUptime(seconds) {
+      const totalHours = Math.floor(Number(seconds || 0) / 3600);
+      const days = Math.floor(totalHours / 24); const hours = totalHours % 24;
+      return days ? `${days}d ${hours}h` : `${hours}h`;
+    }
+    function render(data) {
+      $("cpu").textContent = number(data.cpu?.percent) + "%";
+      $("cpuCores").textContent = `${data.cpu?.physical ?? "—"} físicos · ${data.cpu?.logical ?? "—"} lógicos`;
+      $("memory").textContent = number(data.memory?.percent) + "%";
+      $("memoryDetail").textContent = `${number(data.memory?.available_gb)} GB disponíveis de ${number(data.memory?.total_gb)} GB`;
+      const disks = Array.isArray(data.disks) ? data.disks : [];
+      const highest = disks.reduce((max, disk) => Math.max(max, Number(disk.used_percent || 0)), 0);
+      $("disk").textContent = disks.length ? number(highest) + "%" : "N/D";
+      $("diskDetail").textContent = disks.length + (disks.length === 1 ? " volume identificado" : " volumes identificados");
+      $("uptime").textContent = formatUptime(data.uptime_seconds);
+      $("system").replaceChildren(
+        cell("Hostname", data.hostname), cell("Sistema operacional", data.os),
+        cell("Inicialização", new Date(data.boot_time).toLocaleString("pt-BR")),
+        cell("CPU", `${data.cpu?.logical ?? "—"} processadores lógicos`)
+      );
+      const dns = data.connectivity?.dns;
+      $("network").replaceChildren(
+        cell("Teste ICMP · 1.1.1.1", data.connectivity?.internet_ip_test ? "Resposta recebida" : "Sem resposta"),
+        cell("Resolução DNS", dns?.ok ? dns.resolved_ip : "Falha"),
+        cell("Interfaces", Object.keys(data.network_interfaces || {}).length),
+        cell("Coletado em", new Date(data.generated_at).toLocaleString("pt-BR"))
+      );
+      const diskBody = $("disks"); diskBody.replaceChildren();
+      if (!disks.length) diskBody.append(row(["—", "Nenhum volume acessível", "—", "—", "—", "—"]));
+      for (const disk of disks) diskBody.append(row([
+        disk.device, disk.mount, disk.filesystem, number(disk.total_gb) + " GB",
+        number(disk.free_gb) + " GB", number(disk.used_percent) + "%"
+      ]));
+      const processBody = $("processes"); processBody.replaceChildren();
+      for (const process of (data.top_processes || [])) processBody.append(row([
+        process.pid, process.name, number(process.cpu_percent) + "%", number(process.memory_percent, 2) + "%"
+      ]));
+      if (!processBody.children.length) processBody.append(row(["—", "Nenhum processo disponível", "—", "—"]));
+      const recommendations = $("recommendations"); recommendations.replaceChildren();
+      for (const message of (data.recommendations || [])) {
+        const item = document.createElement("div");
+        item.className = "recommendation" + (message.startsWith("Nenhum") ? " ok" : "");
+        item.textContent = message; recommendations.append(item);
+      }
+      $("error").hidden = true; $("state").textContent = "Coleta concluída";
+    }
+    async function run() {
+      const button = $("run"); button.disabled = true; button.textContent = "Coletando…";
+      $("state").textContent = "Lendo recursos da estação"; $("error").hidden = true;
+      try {
+        const response = await fetch("/diagnostic", {method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+        if (!response.ok) throw new Error("A API retornou HTTP " + response.status + ".");
+        render(await response.json());
+      } catch (error) {
+        $("state").textContent = "Falha na coleta";
+        $("error").textContent = error instanceof Error ? error.message : "Não foi possível concluir a coleta.";
+        $("error").hidden = false;
+      } finally { button.disabled = false; button.textContent = "Executar novamente"; }
+    }
+    $("run").addEventListener("click", run); run();
+  </script>
+</body>
+</html>
