@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+
+import support_toolkit as toolkit
 from support_toolkit import dns_test, recommendations, top_processes
 
 
@@ -58,3 +61,39 @@ def test_collect_has_required_sections():
         "top_processes",
     } <= report.keys()
     assert report["uptime_seconds"] >= 0
+
+
+def test_collect_applies_process_limit_once(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(toolkit.psutil, "disk_partitions", lambda all=False: [])
+    monkeypatch.setattr(toolkit.psutil, "net_if_addrs", lambda: {})
+    monkeypatch.setattr(
+        toolkit.psutil,
+        "virtual_memory",
+        lambda: SimpleNamespace(total=8 * 2**30, available=4 * 2**30, percent=50),
+    )
+    monkeypatch.setattr(toolkit.psutil, "boot_time", lambda: 1_700_000_000)
+    monkeypatch.setattr(
+        toolkit.psutil,
+        "cpu_count",
+        lambda logical=True: 8 if logical else 4,
+    )
+    monkeypatch.setattr(toolkit.psutil, "cpu_percent", lambda interval=None: 12.5)
+    monkeypatch.setattr(toolkit, "ping", lambda host: True)
+    monkeypatch.setattr(
+        toolkit,
+        "dns_test",
+        lambda: {"host": "example.com", "resolved_ip": "192.0.2.1", "ok": True},
+    )
+
+    def fake_top_processes(limit=8):
+        calls.append(limit)
+        return []
+
+    monkeypatch.setattr(toolkit, "top_processes", fake_top_processes)
+
+    report = toolkit.collect(process_limit=3)
+
+    assert report["top_processes"] == []
+    assert calls == [3]

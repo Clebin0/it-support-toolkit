@@ -73,7 +73,7 @@ def top_processes(limit: int = 8) -> list[dict[str, Any]]:
     )[:limit]
 
 
-def collect() -> dict[str, Any]:
+def collect(process_limit: int = 8) -> dict[str, Any]:
     disks = []
     for part in psutil.disk_partitions(all=False):
         try:
@@ -122,7 +122,7 @@ def collect() -> dict[str, Any]:
             "internet_ip_test": ping("1.1.1.1"),
             "dns": dns_test(),
         },
-        "top_processes": top_processes(),
+        "top_processes": top_processes(process_limit),
     }
 
 
@@ -146,8 +146,8 @@ def recommendations(data: dict[str, Any]) -> list[str]:
     return tips
 
 
-def build_report() -> dict[str, Any]:
-    report = collect()
+def build_report(process_limit: int = 8) -> dict[str, Any]:
+    report = collect(process_limit)
     report["recommendations"] = recommendations(report)
     return report
 
@@ -170,8 +170,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    report = build_report()
-    report["top_processes"] = top_processes(args.top_processes)
+    report = build_report(args.top_processes)
     output = json.dumps(
         report,
         indent=None if args.compact else 2,
